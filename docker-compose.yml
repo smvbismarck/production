@@ -4,6 +4,8 @@ services:
     image: postgres:alpine
     env_file:
       - .env/postgres.env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
     healthcheck:
             test: [ "CMD", "pg_isready", "-q", "-d", "${DB_NAME}", "-U", "postgres" ]
             timeout: 45s
