@@ -2,7 +2,10 @@ version: '3'
 services:
   reverse-proxy:
           image: traefik
-          command: --api.insecure=true --providers.docker
+          command:
+              - "--api.insecure=true"
+              - "--providers.docker=true"
+              - "--providers.docker.exposedbydefault=false"
           ports:
                 # The HTTP port
                 - "80:80"
@@ -11,6 +14,11 @@ services:
           volumes:
           # So that Traefik can listen to the Docker events
           - /var/run/docker.sock:/var/run/docker.sock
+          labels:
+              - traefik.docker.network=front
+              - traefik.port=80
+          networks:
+              - front
   database:
     image: postgres:alpine
     env_file:
@@ -31,12 +39,15 @@ services:
     depends_on:
             database:
                     condition:  service_healthy
-    ports:
-    - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=Host(`127.0.0.1`)"
+      - "traefik.http.services.django.loadbalancer.server.port=8000"
+      - "traefik.docker.network=smvsite-deployment_front"
+      - "traefik.port=8000"
     networks:
             - back
-       
-
+            - front
 networks:
         back:
              driver: bridge
@@ -44,3 +55,9 @@ networks:
                 config:
                   - subnet: 10.5.0.0/16
                     gateway: 10.5.0.1
+        front:
+            driver: bridge
+            ipam:
+               config:
+                 - subnet: 10.6.0.0/16
+                   gateway: 10.6.0.1
