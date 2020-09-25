@@ -1,4 +1,4 @@
-version: '3.0'
+version: '3'
 services:
   database:
     image: postgres:alpine
@@ -11,14 +11,25 @@ services:
             timeout: 45s
             interval: 10s
             retries: 10
+    networks:
+            - back
   django:
     image: smvsite/smvsite
     env_file:
       - .env/django.env
-    ports:
-    - "8000:8000"
     depends_on:
             database:
                     condition:  service_healthy
-    links:
-      - "database"
+    ports:
+    - "8000:8000"
+    networks:
+            - back
+       
+
+networks:
+        back:
+             driver: bridge
+             ipam:
+                config:
+                  - subnet: 10.5.0.0/16
+                    gateway: 10.5.0.1
