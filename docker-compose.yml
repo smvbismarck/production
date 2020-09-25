@@ -1,0 +1,22 @@
+version: '3.0'
+services:
+  database:
+    image: postgres:alpine
+    env_file:
+      - .env/postgres.env
+    healthcheck:
+            test: [ "CMD", "pg_isready", "-q", "-d", "${DB_NAME}", "-U", "postgres" ]
+            timeout: 45s
+            interval: 10s
+            retries: 10
+  django:
+    image: smvsite/smvsite
+    env_file:
+      - .env/django.env
+    ports:
+    - "8000:8000"
+    depends_on:
+            database:
+                    condition:  service_healthy
+    links:
+      - "database"
