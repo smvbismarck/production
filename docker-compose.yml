@@ -3,9 +3,7 @@ services:
   reverse-proxy:
           image: traefik
           command:
-              - "--api=true"
               - "--api.insecure=true"
-              - "--api.dashboard=true"
               - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
               - "--api.insecure=true"
