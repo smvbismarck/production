@@ -4,12 +4,15 @@ services:
           image: traefik
           command:
               - "--api.insecure=true"
+              - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
+              - "--api.insecure=true"
               - "--providers.docker.exposedbydefault=false"
+              - "--providers.docker.network=front"
+              - "--entrypoints.web.address=:80"
           ports:
                 # The HTTP port
                 - "80:80"
-                # The Web UI (enabled by --api.insecure=true)
           volumes:
           # So that Traefik can listen to the Docker events
           - /var/run/docker.sock:/var/run/docker.sock
@@ -23,7 +26,6 @@ services:
               - "traefik.port=8080"
               - "traefik.http.routers.dashboard.middlewares=traefik-auth"
               - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
-              
           networks:
               - front
   database:
@@ -48,9 +50,9 @@ services:
                     condition:  service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`127.0.0.1`)"
+      - "traefik.http.routers.django.rule=Host(`127.0.0.1`) && PathPrefix(`/`)"
       - "traefik.http.services.django.loadbalancer.server.port=8000"
-      - "traefik.docker.network=smvsite-deployment_front"
+      - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
     networks:
             - back
