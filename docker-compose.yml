@@ -6,9 +6,11 @@ services:
               - "--api=true"
               - "--api.insecure=true"
               - "--api.dashboard=true"
+              - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
+              - "--api.insecure=true"
               - "--providers.docker.exposedbydefault=false"
-              - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+              - "--providers.docker.network=front"
               - "--entrypoints.web.address=:80"
           ports:
                 # The HTTP port
@@ -52,7 +54,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.django.rule=Host(`127.0.0.1`) && PathPrefix(`/`)"
       - "traefik.http.services.django.loadbalancer.server.port=8000"
-      - "traefik.docker.network=smvsite-deployment_front"
+      - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
     networks:
             - back
