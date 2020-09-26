@@ -4,22 +4,28 @@ services:
           image: traefik
           command:
               - "--api=true"
+              - "--api.insecure=true"
               - "--api.dashboard=true"
               - "--providers.docker=true"
               - "--providers.docker.exposedbydefault=false"
+              - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+              - "--entrypoints.web.address=:80"
           ports:
                 # The HTTP port
                 - "80:80"
-                # The Web UI (enabled by --api.insecure=true)
-                - "8080:8080"
           volumes:
           # So that Traefik can listen to the Docker events
           - /var/run/docker.sock:/var/run/docker.sock
           labels:
               - "traefik.enable=True"
-              - "traefik.http.routers.dashboard.rule=Host(`127.0.0.1`) && PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+              - "traefik.http.routers.dashboard.rule=Host(`0.0.0.0`)"
               - "treafik.http.routers.dashboard.service=api@internal"
-              - traefik.docker.network=front
+              - "traefik.docker.network=smvsite-deployment_front"
+              - "traefik.docker.network=front"
+              - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+              - "traefik.port=8080"
+              - "traefik.http.routers.dashboard.middlewares=traefik-auth"
+              - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
           networks:
               - front
   database:
