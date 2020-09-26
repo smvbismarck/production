@@ -8,7 +8,6 @@ services:
               - "--providers.docker=true"
               - "--api.insecure=true"
               - "--providers.docker.exposedbydefault=false"
-              - "--providers.docker.network=front"
               - "--entrypoints.web.address=:80"
           ports:
                 # The HTTP port
@@ -20,14 +19,10 @@ services:
               - "traefik.enable=True"
               - "traefik.http.routers.dashboard.rule=Host(`0.0.0.0`)"
               - "treafik.http.routers.dashboard.service=api@internal"
-              - "traefik.docker.network=smvsite-deployment_front"
-              - "traefik.docker.network=front"
               - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
               - "traefik.port=8080"
               - "traefik.http.routers.dashboard.middlewares=traefik-auth"
               - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
-          networks:
-              - front
   database:
     image: postgres:alpine
     env_file:
@@ -39,8 +34,6 @@ services:
             timeout: 45s
             interval: 10s
             retries: 10
-    networks:
-            - back
   django:
     image: smvsite/smvsite
     env_file:
@@ -54,19 +47,3 @@ services:
       - "traefik.http.services.django.loadbalancer.server.port=8000"
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
-    networks:
-            - back
-            - front
-networks:
-        back:
-             driver: bridge
-             ipam:
-                config:
-                  - subnet: 10.5.0.0/16
-                    gateway: 10.5.0.1
-        front:
-            driver: bridge
-            ipam:
-               config:
-                 - subnet: 10.6.0.0/16
-                   gateway: 10.6.0.1
