@@ -30,6 +30,7 @@ services:
               - "traefik.http.routers.dashboard.middlewares=traefik-auth"
               - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
               - "traefik.http.middlewares.grafana-prefix.addprefix.prefix=/grafana"
+          restart: always
   database:
     image: postgres:alpine
     env_file:
@@ -41,6 +42,7 @@ services:
             timeout: 45s
             interval: 10s
             retries: 10
+    restart: always
 
   django:
     image: smvsite/smvsite
@@ -55,6 +57,7 @@ services:
       - "traefik.http.services.django.loadbalancer.server.port=8000"
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
+    restart: always
 
   influxdb:
       image: influxdb
@@ -63,6 +66,7 @@ services:
       volumes:
         - ./influxdb:/var/lib/influxdb
         - ./influxdb.conf:/etc/influxdb/inluxdb.conf
+      restart: always
   telegraf:
     image: telegraf
     links:
@@ -77,6 +81,7 @@ services:
         - /sys:/rootfs/sys:ro
         - /proc:/rootfs/proc:ro
         - /etc:/rootfs/etc:ro
+    restart: always
 
   grafana:
       image: grafana/grafana
@@ -87,3 +92,4 @@ services:
           - influxdb
       volumes:
         - ./grafana:/var/lib/grafana
+      restart: always
