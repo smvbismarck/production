@@ -4,10 +4,11 @@ services:
           image: traefik
           command:
               - "--api.insecure=true"
-              - "--metrics.influxdb.address=http://influxdb:8086"
-              - "--metrics.influxdb.database=traefik"
+              - "--metrics.influxdb.address=influxdb:8086"
+              - "--metrics.influxdb.database=telegraf"
               - "--metrics.influxdb.username=telegraf"
               - "--metrics.influxdb.password=telegraf"
+              - "--metrics.influxdb.protocol=http"
               - "--accesslog=true"
               - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
