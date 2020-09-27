@@ -4,6 +4,11 @@ services:
           image: traefik
           command:
               - "--api.insecure=true"
+              - "--metrics.influxdb.address=http://influxdb:8086"
+              - "--metrics.influxdb.database=traefik"
+              - "--metrics.influxdb.username=telegraf"
+              - "--metrics.influxdb.password=telegraf"
+              - "--accesslog=true"
               - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
               - "--api.insecure=true"
@@ -17,12 +22,13 @@ services:
           - /var/run/docker.sock:/var/run/docker.sock
           labels:
               - "traefik.enable=True"
-              - "traefik.http.routers.dashboard.rule=Host(`0.0.0.0`)"
+              - "traefik.http.routers.dashboard.rule=Host(`0.0.0.0`) && PathPrefix(`/`)"
               - "treafik.http.routers.dashboard.service=api@internal"
               - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
               - "traefik.port=8080"
               - "traefik.http.routers.dashboard.middlewares=traefik-auth"
               - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
+              - "traefik.http.middlewares.grafana-prefix.addprefix.prefix=/grafana"
   database:
     image: postgres:alpine
     env_file:
@@ -34,6 +40,7 @@ services:
             timeout: 45s
             interval: 10s
             retries: 10
+
   django:
     image: smvsite/smvsite
     env_file:
@@ -47,3 +54,35 @@ services:
       - "traefik.http.services.django.loadbalancer.server.port=8000"
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
+
+  influxdb:
+      image: influxdb
+      env_file:
+        - .env/influxdb.env
+      volumes:
+        - ./influxdb:/var/lib/influxdb
+        - ./influxdb.conf:/etc/influxdb/inluxdb.conf
+  telegraf:
+    image: telegraf
+    links:
+        - influxdb
+    environment:
+        HOST_PROC: /rootfs/proc
+        HOST_SYS: /rootfs/sys
+        HOST_ETC: /rootfs/etc
+    volumes:
+        - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - /sys:/rootfs/sys:ro
+        - /proc:/rootfs/proc:ro
+        - /etc:/rootfs/etc:ro
+
+  grafana:
+      image: grafana/grafana
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.grafana.rule=Host(`localhost`)"
+      links:
+          - influxdb
+      volumes:
+        - ./grafana:/var/lib/grafana
