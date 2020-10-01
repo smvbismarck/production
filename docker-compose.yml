@@ -93,3 +93,7 @@ services:
       volumes:
         - ./grafana:/var/lib/grafana
       restart: always
+  
+  redis:
+        image: redis
+        restart: always
