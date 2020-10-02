@@ -48,6 +48,8 @@ services:
     image: smvsite/smvsite
     env_file:
       - .env/django.env
+    volumes:
+            - ./django-media:/code/smvsite/media
     depends_on:
             database:
                     condition:  service_healthy
