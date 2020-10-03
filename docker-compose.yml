@@ -60,6 +60,7 @@ services:
       - "traefik.http.routers.traefik.entrypoints=web"
       - "traefik.port=8000"
     restart: always
+    entrypoint: gunicorn -b 0.0.0.0:8000 smvsite.wsgi_without_static
 
   influxdb:
       image: influxdb
@@ -99,3 +100,13 @@ services:
   redis:
         image: redis
         restart: always
+  staticfiles:
+          image: smvsite/static
+          labels:
+                  - "traefik.enable=true"
+                  - "traefik.http.routers.staticfiles.rule=Host(`127.0.0.1`) && PathPrefix(`/static`) || PathPrefix(`/media`)"
+                  - "traefik.http.routers.traefik.entrypoints=web"
+          volumes:
+                - ./django-media:/usr/share/nginx/html/media
+
+                  
