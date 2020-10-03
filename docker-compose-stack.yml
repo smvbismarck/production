@@ -29,10 +29,10 @@ services:
               - "traefik.port=8080"
               - "traefik.http.routers.dashboard.middlewares=traefik-auth"
               - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
-              - "traefik.http.middlewares.grafana-prefix.addprefix.prefix=/grafana"
           restart: always
   database:
     image: postgres:alpine
+    container_name: database
     env_file:
       - .env/postgres.env
     volumes:
@@ -43,6 +43,7 @@ services:
             interval: 10s
             retries: 10
     restart: always
+    
 
   django:
     image: smvsite/smvsite
@@ -50,9 +51,6 @@ services:
       - .env/django.env
     volumes:
             - ./django-media:/code/smvsite/media
-    depends_on:
-            database:
-                    condition:  service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.django.rule=Host(`127.0.0.1`) && PathPrefix(`/`)"
@@ -99,6 +97,7 @@ services:
   
   redis:
         image: redis
+        container_name: redis
         restart: always
   staticfiles:
           image: smvsite/static
@@ -110,4 +109,4 @@ services:
           volumes:
                 - ./django-media:/usr/share/nginx/html/media
 
-                  
+
