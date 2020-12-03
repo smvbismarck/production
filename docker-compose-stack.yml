@@ -10,25 +10,26 @@ services:
               - "--metrics.influxdb.password=telegraf"
               - "--metrics.influxdb.protocol=http"
               - "--accesslog=true"
-              - "--providers.docker.endpoint=unix:///var/run/docker.sock"  
               - "--providers.docker=true"
               - "--api.insecure=true"
               - "--providers.docker.exposedbydefault=false"
               - "--entrypoints.web.address=:80"
+                #- "--providers.docker.swarmmode"
           ports:
                 # The HTTP port
                 - "80:80"
           volumes:
           # So that Traefik can listen to the Docker events
           - /var/run/docker.sock:/var/run/docker.sock
-          labels:
-              - "traefik.enable=True"
-              - "traefik.http.routers.dashboard.rule=Host(`0.0.0.0`) && PathPrefix(`/`)"
-              - "treafik.http.routers.dashboard.service=api@internal"
-              - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
-              - "traefik.port=8080"
-              - "traefik.http.routers.dashboard.middlewares=traefik-auth"
-              - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
+          deploy:
+            labels:
+                - "traefik.enable=True"
+                - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`) && PathPrefix(`/`)"
+                - "treafik.http.routers.dashboard.service=api@internal"
+                - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+                - "traefik.port=8080"
+                - "traefik.http.routers.dashboard.middlewares=traefik-auth"
+                - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
           restart: always
   database:
     image: postgres:alpine
@@ -51,12 +52,13 @@ services:
       - .env/django.env
     volumes:
             - ./django-media:/code/smvsite/media
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`127.0.0.1`) && PathPrefix(`/`)"
-      - "traefik.http.services.django.loadbalancer.server.port=8000"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.port=8000"
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.django.rule=Host(`site.localhost`) && PathPrefix(`/`)"
+        - "traefik.http.services.django.loadbalancer.server.port=8000"
+        - "traefik.http.routers.traefik.entrypoints=web"
+        - "traefik.port=8000"
     restart: always
     entrypoint: gunicorn -b 0.0.0.0:8000 smvsite.wsgi_without_static
 
@@ -86,9 +88,10 @@ services:
 
   grafana:
       image: grafana/grafana
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.grafana.rule=Host(`localhost`)"
+      deploy:
+        labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
       links:
           - influxdb
       volumes:
@@ -101,9 +104,10 @@ services:
         restart: always
   staticfiles:
           image: smvsite/static
-          labels:
+          deploy:
+            labels:
                   - "traefik.enable=true"
-                  - "traefik.http.routers.staticfiles.rule=Host(`127.0.0.1`) && PathPrefix(`/static`) || PathPrefix(`/media`)"
+                  - "traefik.http.routers.staticfiles.rule=Host(`site.localhost`) && PathPrefix(`/static`) || PathPrefix(`/media`)"
                   - "traefik.http.routers.traefik.entrypoints=web"
                   - "traefik.http.services.staticfiles.loadbalancer.server.port=80"
           volumes:
