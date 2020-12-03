@@ -14,7 +14,7 @@ services:
               - "--api.insecure=true"
               - "--providers.docker.exposedbydefault=false"
               - "--entrypoints.web.address=:80"
-                #- "--providers.docker.swarmmode"
+              - "--providers.docker.swarmmode"
           ports:
                 # The HTTP port
                 - "80:80"
