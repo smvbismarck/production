@@ -55,7 +55,7 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.django.rule=Host(`site.localhost`) && PathPrefix(`/`)"
+        - "traefik.http.routers.django.rule=Host(`localhost`) && PathPrefix(`/`)"
         - "traefik.http.services.django.loadbalancer.server.port=8000"
         - "traefik.http.routers.traefik.entrypoints=web"
         - "traefik.port=8000"
@@ -107,7 +107,7 @@ services:
           deploy:
             labels:
                   - "traefik.enable=true"
-                  - "traefik.http.routers.staticfiles.rule=Host(`site.localhost`) && PathPrefix(`/static`) || PathPrefix(`/media`)"
+                  - "traefik.http.routers.staticfiles.rule=Host(`localhost`) && PathPrefix(`/static`) || PathPrefix(`/media`)"
                   - "traefik.http.routers.traefik.entrypoints=web"
                   - "traefik.http.services.staticfiles.loadbalancer.server.port=80"
           volumes:
